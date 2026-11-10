@@ -82,6 +82,10 @@ few hundred short calls. Results land in `results/<timestamp>/` (`runs.jsonl` tr
 `report.md`). Record the model id, date and trial count with any number you quote, because models
 change under the same name.
 
+## Design notes
+
+Why the harness is built this way, and what each choice costs: [docs/DESIGN.md](docs/DESIGN.md).
+
 ## Add a scenario
 
 Drop a YAML file into `src/agentsec/scenarios/`. The schema is `agentsec.types.Scenario`
