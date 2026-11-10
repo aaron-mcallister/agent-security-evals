@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-security-evals"
+version = "0.1.0"
+description = "Small, deterministic security evals for tool-using LLM agents: indirect prompt injection, tool poisoning, excessive agency and secret handling."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Aaron McAllister" }]
+dependencies = ["pydantic>=2.6", "pyyaml>=6.0"]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+dev = ["pytest>=8", "ruff>=0.6", "pip-audit>=2.7", "anthropic>=0.40"]
+
+[project.scripts]
+agentsec = "agentsec.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentsec"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
