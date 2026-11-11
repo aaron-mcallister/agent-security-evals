@@ -24,6 +24,9 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
+      # The runner's bundled pip/setuptools can lag behind security fixes, and
+      # pip-audit scans the whole environment, so bring them current first.
+      - run: python -m pip install --upgrade pip setuptools
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: ruff format --check .
