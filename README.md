@@ -124,6 +124,12 @@ deterministic capability control beats asking the model to behave is the motivat
 (Debenedetti et al., 2025). The questions this repo asks are narrower: which controls are worth
 buying on top of a model, and what do they cost in utility?
 
+## How this was built
+
+Developed with Claude (Anthropic) as an AI pair programmer. Commits it contributed to are marked
+with a `Co-Authored-By: Claude` trailer. Design decisions, review and responsibility for the code
+are mine.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
