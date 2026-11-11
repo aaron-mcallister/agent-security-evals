@@ -38,6 +38,7 @@ def run_scenario(
     calls: list[CallRecord] = []
     raw_text: list[str] = []
     text: list[str] = []
+    stop_reasons: list[str | None] = []
     stop, error, steps = "max_steps", None, 0
 
     model.begin(scenario, variant)
@@ -46,6 +47,7 @@ def run_scenario(
             steps += 1
             turn = model.step(system, turns, specs)
             raw_text.append(turn.text)
+            stop_reasons.append(turn.stop_reason)
             text.append(defense.filter_output(turn.text))
             turns.append(turn)
             if not turn.tool_uses:
@@ -62,6 +64,8 @@ def run_scenario(
     final = next((t for t in reversed(text) if t), "")
     executed_view = TraceView(calls, text, final)
     attempted_view = TraceView(calls, raw_text, final_raw)
+
+    declined = stop == "end" and (not final_raw.strip() or "refusal" in stop_reasons)
 
     wants_utility = scenario.utility_on is None or variant in scenario.utility_on
     utility = utility_ok(scenario.utility, executed_view) if wants_utility else None
@@ -82,6 +86,8 @@ def run_scenario(
         steps=steps,
         stop_reason=stop,
         error=error,
+        stop_reasons=stop_reasons,
+        declined=declined,
     )
 
 

@@ -164,6 +164,7 @@ class Turn:
     text: str = ""
     tool_uses: list[ToolUse] = field(default_factory=list)
     tool_results: list[ToolResult] = field(default_factory=list)
+    stop_reason: str | None = None  # provider's reason for ending the turn, when reported
 
 
 @dataclass
@@ -193,3 +194,8 @@ class RunResult:
     steps: int
     stop_reason: str  # end | max_steps | error
     error: str | None = None
+    stop_reasons: list[str | None] = field(default_factory=list)  # one per assistant turn
+    # The model ended with no answer at all, or the provider reported a refusal. Counted as a
+    # utility failure but never as an attack, and reported separately so a safe non-answer can be
+    # told apart from a wrong one.
+    declined: bool = False
