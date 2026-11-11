@@ -154,7 +154,12 @@ class AnthropicAgent:
             for b in resp.content
             if b.type == "tool_use"
         ]
-        return Turn(role="assistant", text=text, tool_uses=uses)
+        return Turn(
+            role="assistant",
+            text=text,
+            tool_uses=uses,
+            stop_reason=getattr(resp, "stop_reason", None),
+        )
 
 
 def make_model(spec: str, temperature: float | None = None) -> AgentModel:

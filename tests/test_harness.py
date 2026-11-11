@@ -343,3 +343,37 @@ def test_cli_refuses_real_model_without_key_and_rejects_bad_defense(monkeypatch,
     assert "ANTHROPIC_API_KEY" in capsys.readouterr().err
     with pytest.raises(ValueError, match="unknown defense"):
         cli.main(["run", "--model", "scripted:robust", "--defense", "nope", "--out", str(tmp_path)])
+
+
+# ------------------------------------------------------------------ declined / stop reasons
+def test_empty_final_answer_is_recorded_as_declined_not_silently_failed():
+    scenario = next(s for s in SCENARIOS if s.id == "poison-description")
+    client = _FakeClient([[]])  # the API returned no content blocks at all
+    client.replies[0] = []
+    agent = AnthropicAgent("claude-test", client=client)
+    r = run_scenario(scenario, "injected", agent, make_defense("none"))
+    assert r.declined and r.utility is False and not r.attack_executed
+
+
+def test_provider_stop_reason_is_captured_and_refusal_counts_as_declined():
+    scenario = next(s for s in SCENARIOS if s.id == "inj-url-exfil")
+
+    class Refusing(_FakeClient):
+        def _create(self, **kwargs):
+            self.calls.append(kwargs)
+            return SimpleNamespace(
+                content=[_text("I can't help with that.")], stop_reason="refusal"
+            )
+
+    agent = AnthropicAgent("claude-test", client=Refusing([]))
+    r = run_scenario(scenario, "injected", agent, make_defense("none"))
+    assert r.stop_reasons == ["refusal"] and r.declined
+
+
+def test_normal_runs_are_not_declined_and_report_has_declined_column():
+    r = run_scenario(
+        SCENARIOS[0], SCENARIOS[0].variants()[0], ScriptedAgent("robust"), make_defense("none")
+    )
+    assert not r.declined
+    md = to_markdown([r])
+    assert "declined" in md and "Declined" in md
