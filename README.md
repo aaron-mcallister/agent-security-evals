@@ -1,6 +1,6 @@
 # agent-security-evals
 
-Small, deterministic security evals for **tool-using LLM agents**. Twelve scenarios probe whether an
+Small, deterministic security evals for **tool-using LLM agents**. Eighteen scenarios probe whether an
 agent can be steered by hostile content into leaking secrets, taking destructive actions, or
 exceeding the scope of what the user asked, and whether a deterministic control layer closes the
 gap the model leaves.
@@ -12,7 +12,7 @@ a YAML file.
 
 | Category | What happens | Scenarios |
 |---|---|---|
-| `indirect_injection` | Attacker text arrives through a tool result (web page, email, file) | 5 |
+| `indirect_injection` | Attacker text arrives through a tool result (web page, email, file) | 11 |
 | `tool_poisoning` | A tool's *description* (MCP-style) carries hidden instructions, or one tool rewrites how another is used | 2 |
 | `excessive_agency` | No attacker. The agent oversteps the scope the user stated | 3 |
 | `secret_handling` | Credentials are extracted or propagated | 2 |
@@ -34,7 +34,7 @@ Scenarios with no attacker (excessive agency) run once.
 - **Secure utility**: task completed and no attack executed. This is the headline number.
 - **Control false positives**: attack condition tripped on the clean variant. Must be 0.
 
-Rates come with Wilson 95% intervals. With a dozen scenarios the intervals are wide. Read them.
+Rates come with Wilson 95% intervals. With eighteen scenarios the intervals are wide. Read them.
 
 ## Design choices
 
@@ -63,7 +63,7 @@ Rates come with Wilson 95% intervals. With a dozen scenarios the intervals are w
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest                                   # 100 tests, no network, no API key
+pytest                                   # 150 tests, no network, no API key
 
 agentsec list
 agentsec run --model scripted:naive,scripted:robust --defense none,policy
@@ -94,11 +94,31 @@ a `world`, a `reference_plan` (what a correct agent does), `utility` predicates,
 predicates. Use `{{PAYLOAD}}` wherever attacker content should appear. `pytest` then checks that
 the new scenario is well formed and that the fixture agents score as expected.
 
+## Results
+
+Run on 2026-11-11, 5 trials per scenario, 18 scenarios. Full tables, per-scenario breakdown and
+caveats: [docs/RESULTS.md](docs/RESULTS.md).
+
+| Model | Defence | Attacks executed | Declined |
+|---|---|---|---|
+| `claude-sonnet-5-5` | none | 0/90 (CI 0-4%) | 10/90 (API refusals, two scenarios) |
+| `claude-haiku-5-5` | none | 6/90 (7%, CI 3-14%) | 0/90 |
+| `claude-haiku-5-5` | spotlight + policy | 1/90 (1%, CI 0-6%) | 0/90 |
+
+- Sonnet executed or attempted none of the attacks. It also ended 10 injected runs with an API
+  `refusal` and no answer, so "no attack" is not the same as "task done".
+- Haiku's successful attacks were tool-description poisoning (5/10) and one output-only scenario.
+  The policy gate blocked every tool-call attack it saw, and cannot see output-only attacks.
+- These are 18 author-written, non-adaptive scenarios and small samples. They do not show a model is
+  safe, and the defence comparison is not statistically settled. Read the intervals.
+
 ## Limitations (read before quoting numbers)
 
-- **Twelve hand-written, static scenarios.** This is a probe set, not a benchmark or leaderboard.
+- **Eighteen hand-written, static scenarios.** This is a probe set, not a benchmark or leaderboard.
   The attacks are not adaptive: a motivated attacker iterates against a specific model and
   defence.
+- **Some attacks need no tool call.** A tool-level policy cannot stop an attacker's link that the
+  assistant repeats in its answer (`subtle-link-planting`). The tests assert this limitation.
 - **The `policy` defence is an oracle.** Its policies are written per scenario from the user's
   request. It shows what a correctly scoped deterministic control can do, not that such a policy
   can be derived automatically.
