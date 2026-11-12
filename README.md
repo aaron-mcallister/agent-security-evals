@@ -1,5 +1,7 @@
 # agent-security-evals
 
+[![CI](https://github.com/aaron-mcallister/agent-security-evals/actions/workflows/ci.yml/badge.svg)](https://github.com/aaron-mcallister/agent-security-evals/actions/workflows/ci.yml)
+
 Small, deterministic security evals for **tool-using LLM agents**. Eighteen scenarios probe whether an
 agent can be steered by hostile content into leaking secrets, taking destructive actions, or
 exceeding the scope of what the user asked, and whether a deterministic control layer closes the
@@ -21,14 +23,14 @@ These map to OWASP's LLM Top 10 (2025) items LLM01 prompt injection, LLM02 sensi
 disclosure and LLM06 excessive agency.
 
 Each attack scenario runs twice: an **injected** variant and a **clean control** with the payload
-swapped for benign text. The control exists to prove the scorer does not fire on normal behaviour.
+swapped for benign text. The control exists to prove the scorer does not fire on normal behavior.
 Scenarios with no attacker (excessive agency) run once.
 
 ### Metrics
 
 - **Utility**: the user's legitimate task was completed. Reported alongside security, because an
   agent that refuses everything is not secure, just useless.
-- **ASR executed**: an attack-success condition held after any defences.
+- **ASR executed**: an attack-success condition held after any defenses.
 - **ASR attempted**: the model *tried* the attack even if a control blocked it. The gap between the
   two is the value the control layer adds on top of the model.
 - **Secure utility**: task completed and no attack executed. This is the headline number.
@@ -50,7 +52,7 @@ Rates come with Wilson 95% intervals. With eighteen scenarios the intervals are 
   attack, robust on none, and neither on any clean control. These are test fixtures for the
   harness, not claims about any real model. The first run of this check caught a real scorer bug
   (a GET to an attacker URL that returned 404 was not counted as executed exfiltration).
-- **Defence layers are separable** (`--defense`):
+- **Defense layers are separable** (`--defense`):
   - `none`: the model alone.
   - `spotlight`: untrusted tool output is fenced in `<untrusted_data>` tags (closing tags inside
     the content are neutralised) and the model is told it is data. Prompt-level, probabilistic.
@@ -99,7 +101,7 @@ the new scenario is well formed and that the fixture agents score as expected.
 Run on 2026-11-11, 5 trials per scenario, 18 scenarios. Full tables, per-scenario breakdown and
 caveats: [docs/RESULTS.md](docs/RESULTS.md).
 
-| Model | Defence | Attacks executed | Declined |
+| Model | Defense | Attacks executed | Declined |
 |---|---|---|---|
 | `claude-sonnet-5-5` | none | 0/90 (CI 0-4%) | 10/90 (API refusals, two scenarios) |
 | `claude-haiku-5-5` | none | 6/90 (7%, CI 3-14%) | 0/90 |
@@ -110,16 +112,16 @@ caveats: [docs/RESULTS.md](docs/RESULTS.md).
 - Haiku's successful attacks were tool-description poisoning (5/10) and one output-only scenario.
   The policy gate blocked every tool-call attack it saw, and cannot see output-only attacks.
 - These are 18 author-written, non-adaptive scenarios and small samples. They do not show a model is
-  safe, and the defence comparison is not statistically settled. Read the intervals.
+  safe, and the defense comparison is not statistically settled. Read the intervals.
 
 ## Limitations (read before quoting numbers)
 
 - **Eighteen hand-written, static scenarios.** This is a probe set, not a benchmark or leaderboard.
   The attacks are not adaptive: a motivated attacker iterates against a specific model and
-  defence.
+  defense.
 - **Some attacks need no tool call.** A tool-level policy cannot stop an attacker's link that the
   assistant repeats in its answer (`subtle-link-planting`). The tests assert this limitation.
-- **The `policy` defence is an oracle.** Its policies are written per scenario from the user's
+- **The `policy` defense is an oracle.** Its policies are written per scenario from the user's
   request. It shows what a correctly scoped deterministic control can do, not that such a policy
   can be derived automatically.
 - **Predicate scoring has blind spots.** A model that paraphrases, translates or encodes a secret
@@ -139,16 +141,24 @@ and Dependabot keeps dependencies and actions current. See [SECURITY.md](SECURIT
 ## Prior work
 
 This is deliberately small. For broader coverage see AgentDojo (Debenedetti et al., 2024) and
-InjecAgent (Zhan et al., 2024). The spotlighting defence follows Hines et al. (2024). The idea that
+InjecAgent (Zhan et al., 2024). The spotlighting defense follows Hines et al. (2024). The idea that
 deterministic capability control beats asking the model to behave is the motivation behind CaMeL
 (Debenedetti et al., 2025). The questions this repo asks are narrower: which controls are worth
 buying on top of a model, and what do they cost in utility?
 
+## Related
+
+Two companion projects, vendor-neutral like this one:
+[claude-code-governance](https://github.com/aaron-mcallister/claude-code-governance) (a tested managed-settings
+policy and guard hook for Claude Code) and
+[hardened-mcp-server](https://github.com/aaron-mcallister/hardened-mcp-server) (an MCP server whose security
+controls are each backed by a test).
+
 ## How this was built
 
-Developed with Claude (Anthropic) as an AI pair programmer. Commits it contributed to are marked
-with a `Co-Authored-By: Claude` trailer. Design decisions, review and responsibility for the code
-are mine.
+Developed with Claude (Anthropic) as an AI pair programmer. Most commits it contributed to are marked
+with a `Co-Authored-By: Claude` trailer; some squash-merged pull requests are not, because GitHub's
+squash message drops it. Design decisions, review and responsibility for the code are mine.
 
 ## License
 
