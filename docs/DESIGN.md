@@ -23,7 +23,7 @@ false negatives.
 **Decision.** Each attack scenario runs twice: once with the payload and once with the payload
 replaced by benign text (`{{PAYLOAD}}` substitution). Scenarios with no attacker run once.
 
-**Why.** The clean run proves the scorer does not fire on normal behaviour. The "control false
+**Why.** The clean run proves the scorer does not fire on normal behavior. The "control false
 positives" column in the report must be 0; anything else means a predicate is wrong, not that
 the model misbehaved.
 
@@ -33,7 +33,7 @@ the model misbehaved.
 "Secure utility" (task completed AND no attack executed) is the headline metric.
 
 **Why.** An agent that refuses everything has an attack success rate of zero and is useless.
-Reporting only attack success rewards that. The same logic applies to defences: a control that
+Reporting only attack success rewards that. The same logic applies to defenses: a control that
 blocks the attack and breaks the task is a cost, and the report shows it.
 
 ## 4. Three notions of "happened": utility, executed, attempted
@@ -53,28 +53,28 @@ and missed a URL-exfiltration attack. A regression test pins it.
 ## 5. Simulated tools only
 
 **Decision.** Files, mail and web are in-memory dictionaries (`src/agentsec/world.py`). Paths are
-normalised (`..` collapsed) and a test asserts that reading a real host file such as
+normalized (`..` collapsed) and a test asserts that reading a real host file such as
 `/etc/passwd` fails.
 
 **Why.** A model steered by an attacker cannot cause real side effects, runs are reproducible,
 and the suite needs no network. This is also why it is safe to publish hostile scenario content.
 
-**Cost.** Tool behaviour is only as faithful as the simulation. There is no real MCP transport,
+**Cost.** Tool behavior is only as faithful as the simulation. There is no real MCP transport,
 authentication handshake or tool discovery.
 
 ## 6. Scripted fixture agents validate the harness, not the models
 
 **Decision.** `scripted:naive` follows any attacker content it sees; `scripted:robust` only does
 the task. The tests require naive to be flagged on every attack, robust on none, and neither on
-any clean control, under every defence.
+any clean control, under every defense.
 
-**Why.** It gives the scorer and defences a known-answer test with no model in the loop. These
+**Why.** It gives the scorer and defenses a known-answer test with no model in the loop. These
 agents say nothing about how any real model behaves, and results from them must never be
 presented as model results.
 
-## 7. The policy defence is an oracle, and the report should be read that way
+## 7. The policy defense is an oracle, and the report should be read that way
 
-**Decision.** The `policy` defence is a deterministic gate in front of the tools: recipient, host,
+**Decision.** The `policy` defense is a deterministic gate in front of the tools: recipient, host,
 read and delete rules scoped to each task, plus a generic secret-pattern DLP on tool arguments and
 the final text. Policies are written per scenario from the user's request.
 
@@ -83,7 +83,7 @@ utility, independent of model robustness.
 
 **What it does not show.** That such a policy can be derived automatically from a request, or
 that the gate covers attacks outside the scenarios. The DLP pattern is generic and easy to evade
-by encoding. `spotlight` is the contrasting case: a prompt-level defence whose effect is
+by encoding. `spotlight` is the contrasting case: a prompt-level defense whose effect is
 probabilistic and model-dependent.
 
 ## 8. Spotlighting is fenced, and the fence cannot be closed from inside
@@ -103,6 +103,6 @@ Traces contain only synthetic canary strings.
 
 **Decision.** Rates are reported as `k/n` with 95% Wilson intervals, and `--trials` repeats runs.
 
-**Why.** Twelve scenarios give wide intervals and model output is non-deterministic. Showing the
+**Why.** Eighteen scenarios give wide intervals and model output is non-deterministic. Showing the
 interval stops one run from being read as a ranking. Always record the model id, date and trial
 count next to any number.
