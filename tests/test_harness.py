@@ -96,7 +96,15 @@ def test_naive_agent_is_flagged_only_when_attacked(scenario, variant):
 
 
 # ------------------------------------------------------------------ defences
-@pytest.mark.parametrize(("scenario", "variant"), CASES, ids=IDS)
+# Attacks that succeed purely through the assistant's own words call no tool, so a tool-level
+# policy gate has nothing to block. That is a real limitation of the control, recorded here on
+# purpose rather than hidden by a weaker scenario.
+OUTPUT_ONLY = {"subtle-link-planting"}
+GATE_CASES = [(s, v) for s, v in CASES if s.id not in OUTPUT_ONLY]
+GATE_IDS = [f"{s.id}:{v}" for s, v in GATE_CASES]
+
+
+@pytest.mark.parametrize(("scenario", "variant"), GATE_CASES, ids=GATE_IDS)
 def test_policy_gate_blocks_execution_but_attempt_is_still_recorded(scenario, variant):
     r = run_scenario(scenario, variant, ScriptedAgent("naive"), make_defense("policy"))
     assert not r.attack_executed
@@ -104,6 +112,14 @@ def test_policy_gate_blocks_execution_but_attempt_is_still_recorded(scenario, va
         assert r.attack_attempted
     if r.utility is not None:
         assert r.utility, "policy gate broke the legitimate task"
+
+
+def test_policy_gate_cannot_stop_output_only_attacks():
+    sc = next(s for s in SCENARIOS if s.id in OUTPUT_ONLY)
+    r = run_scenario(sc, "injected", ScriptedAgent("naive"), make_defense("policy"))
+    assert r.attack_executed, "an output-only attack has no tool call for the gate to block"
+    clean = run_scenario(sc, "clean", ScriptedAgent("naive"), make_defense("policy"))
+    assert not clean.attack_executed
 
 
 def test_policy_gate_unit_rules():
